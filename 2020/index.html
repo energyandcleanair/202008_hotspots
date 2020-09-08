@@ -193,6 +193,23 @@
         opacity: 1;
       }
 
+      .popup .value {
+        font-weight: 500;
+      }
+      .popup .yoy-red {
+        color: red;
+        font-weight: 500;
+      }
+
+      .popup .yoy-green {
+        color: green;
+        font-weight: 500;
+      }
+
+      .popup h5 {
+        margin: 10px 0 0 0;
+      }
+
       /* Logos and intro */
       .logos-box {
         background-color: #fff;
@@ -308,7 +325,10 @@
           "</div>";
       });
 
-      // Adding elements
+      //*********************
+      // Layers
+      //*********************
+
       var hotspots_name = "hotspots-dots";
       var hotspots_dots_source = {
         type: "vector",
@@ -340,6 +360,38 @@
           ],
         },
       };
+
+      var hotspots_emissions_name = "hotspots-emissions";
+      var hotspots_emissions_source = {
+        type: "vector",
+        url: "mapbox://hubert-thieriot.17q05j0b",
+      };
+
+      function hotspots_emissions_layer(year_str) {
+        return {
+          id: "layer-hotspots-emissions",
+          source: "hotspots-emissions",
+          "source-layer": "hotspot_values-3wpxn5",
+          type: "circle",
+          layout: {
+            visibility: "visible",
+          },
+          paint: {
+            "circle-radius": [
+              "interpolate",
+              ["linear"],
+              ["get", year_str],
+              10,
+              2,
+              2500,
+              50,
+            ],
+            "circle-color": "hsla(0, 0%, 100%, 0)",
+            "circle-stroke-width": 1,
+            "circle-stroke-color": "#000000",
+          },
+        };
+      }
 
       var powerplants_name = "powerplants";
       var powerplants_source = {
@@ -452,11 +504,14 @@
           },
         });
 
-        beforeMap.addSource(hotspots_name, hotspots_dots_source);
-        beforeMap.addLayer(hotspots_dots_layer);
+        // beforeMap.addSource(hotspots_name, hotspots_dots_source);
+        // beforeMap.addLayer(hotspots_dots_layer);
 
         beforeMap.addSource(powerplants_name, powerplants_source);
         beforeMap.addLayer(powerplants_layer);
+
+        beforeMap.addSource(hotspots_emissions_name, hotspots_emissions_source);
+        beforeMap.addLayer(hotspots_emissions_layer("y2019sepaug"));
       });
 
       afterMap.on("load", function () {
@@ -504,11 +559,14 @@
           },
         });
 
-        afterMap.addSource(hotspots_name, hotspots_dots_source);
-        afterMap.addLayer(hotspots_dots_layer);
+        // afterMap.addSource(hotspots_name, hotspots_dots_source);
+        // afterMap.addLayer(hotspots_dots_layer);
 
         afterMap.addSource(powerplants_name, powerplants_source);
         afterMap.addLayer(powerplants_layer);
+
+        afterMap.addSource(hotspots_emissions_name, hotspots_emissions_source);
+        afterMap.addLayer(hotspots_emissions_layer("y2020sepaug"));
       });
 
       // A selector or reference to HTML element
@@ -521,18 +579,27 @@
 
       // enumerate ids of the layers
       var toggleableLayerIds = [
-        { id: "layer-hotspots-dots", name: "NASA Hotspots" },
-        { id: "layer-powerplants", name: "Fossil Fueled Power Plants" },
+        {
+          id: "layer-hotspots-emissions",
+          name: "NASA Hotspots",
+          visibility: "visible",
+        },
+        {
+          id: "layer-powerplants",
+          name: "Fossil Fueled Power Plants",
+          visibility: "none",
+        },
       ];
 
       // set up the corresponding toggle button for each layer
       for (var i = 0; i < toggleableLayerIds.length; i++) {
         var id = toggleableLayerIds[i].id;
         var name = toggleableLayerIds[i].name;
+        var visibility = toggleableLayerIds[i].visibility;
 
         var link = document.createElement("a");
         link.href = "#";
-        link.className = "";
+        link.className = visibility == "visible" ? "active" : "";
         link.textContent = name;
         link.id = id;
 
@@ -571,7 +638,6 @@
       function addPowerplantPopup(map_) {
         map_.on("mouseenter", "layer-powerplants", function (e) {
           map_.getCanvas().style.cursor = "pointer";
-          console.log("AAA");
           var coordinates = e.features[0].geometry.coordinates.slice();
           var props = e.features[0].properties;
           var legend = `<div class="popup"><h4>${props.Plant}</h4><span>Fuel: ${props.Fuel}</span><span>Capacity: ${props.Capacity} MW</span></div>`;
@@ -593,7 +659,6 @@
       function addHotspotPopup(map_) {
         map_.on("mouseenter", "layer-hotspots-dots", function (e) {
           map_.getCanvas().style.cursor = "pointer";
-          console.log("AAA");
           var coordinates = e.features[0].geometry.coordinates.slice();
           var props = e.features[0].properties;
           var legend = `<div class="popup"><h4>${props.NASA_NAME}</h4><span>Type: ${props.SOURCETY}</span><span>Country: ${props.COUNTRY}</span></div>`;
@@ -609,8 +674,52 @@
         });
       }
 
-      addHotspotPopup(beforeMap);
-      addHotspotPopup(afterMap);
+      // addHotspotPopup(beforeMap);
+      // addHotspotPopup(afterMap);
+      function yoy(props) {
+        r = ((props.y2020sepaug - props.y2019sepaug) / props.y2019sepaug) * 100;
+        rs = Math.round(r * 10) / 10 + "%";
+        return r > 0 ? "+" + rs : rs;
+      }
+
+      function yoyClass(props) {
+        r = ((props.y2020sepaug - props.y2019sepaug) / props.y2019sepaug) * 100;
+        return r > 0 ? "yoy-red" : "yoy-green";
+      }
+
+      function addHotspotEmissionPopup(map_) {
+        map_.on("mouseenter", "layer-hotspots-emissions", function (e) {
+          map_.getCanvas().style.cursor = "pointer";
+          var coordinates = e.features[0].geometry.coordinates.slice();
+          var props = e.features[0].properties;
+          console.log(e);
+          var legend = `<div class="popup"><h4>${props.NASA_NAME}</h4>
+          <span>Type: ${props.SOURCETY}</span>
+          <span>Country: ${props.COUNTRY}</span>
+          <h5>SO2 emissions</h5>
+          <span>Sep 2018 - Aug 2019: <a class='value'>${Math.round(
+            props.y2019sepaug
+          )} kt SO2/yr</a></span>
+          <span>Sep 2019 - Aug 2020: <a class='value'>${Math.round(
+            props.y2020sepaug
+          )} kt SO2/yr</a></span>
+          <span>Year-on-year: <a class="${yoyClass(props)}">${yoy(
+            props
+          )}</a></span>`;
+          while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+          }
+          popup.setLngLat(coordinates).setHTML(legend).addTo(map_);
+        });
+
+        map_.on("mouseleave", "layer-hotspots-emissions", function () {
+          map_.getCanvas().style.cursor = "";
+          popup.remove();
+        });
+      }
+
+      addHotspotEmissionPopup(beforeMap);
+      addHotspotEmissionPopup(afterMap);
     </script>
   </body>
 </html>
