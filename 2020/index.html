@@ -152,6 +152,23 @@
         display: block;
       }
 
+      .popup .value {
+        font-weight: 500;
+      }
+      .popup .yoy-red {
+        color: red;
+        font-weight: 500;
+      }
+
+      .popup .yoy-green {
+        color: green;
+        font-weight: 500;
+      }
+
+      .popup h5 {
+        margin: 10px 0 0 0;
+      }
+
       /* Boundaries tooltip */
       .tooltip {
         position: relative;
@@ -191,23 +208,6 @@
       .tooltip:hover .tooltiptext {
         visibility: visible;
         opacity: 1;
-      }
-
-      .popup .value {
-        font-weight: 500;
-      }
-      .popup .yoy-red {
-        color: red;
-        font-weight: 500;
-      }
-
-      .popup .yoy-green {
-        color: green;
-        font-weight: 500;
-      }
-
-      .popup h5 {
-        margin: 10px 0 0 0;
       }
 
       /* Logos and intro */
@@ -376,6 +376,10 @@
           layout: {
             visibility: "visible",
           },
+          filter: [
+            "all",
+            ["match", ["get", "SOURCETY"], ["", "Volcano"], false, true],
+          ],
           paint: {
             "circle-radius": [
               "interpolate",
