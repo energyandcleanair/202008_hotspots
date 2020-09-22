@@ -115,7 +115,7 @@
       }
 
       #menu a {
-        font-size: 13px;
+        font-size: 12px;
         color: #404040;
         display: block;
         margin: 0;
@@ -233,6 +233,34 @@
       .logos a {
         padding: 5px;
       }
+
+      .circle {
+        height: 15px !important;
+        width: 15px !important;
+        background-color: transparent;
+        border-radius: 50%;
+        display: inline-block;
+        border: 2px solid;
+        margin-bottom: 5px;
+        margin-top: 5px;
+        vertical-align: middle;
+      }
+
+      .color-coal {
+        border-color: #2d2a3e;
+      }
+
+      .color-oilgas {
+        border-color: blue;
+      }
+
+      .color-smelter {
+        border-color: #f93445;
+      }
+
+      .color-volcano {
+        border-color: #5b9279;
+      }
     </style>
     <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-compare/v0.4.0/mapbox-gl-compare.js"></script>
     <link
@@ -253,7 +281,13 @@
     <div class="legend">
       <nav id="menu"></nav>
       <div id="legend" class="legend-box">
-        <h4>SO2 Concentrations [DU]</h4>
+        <h4>SO2 Column Amount<br>[Dobson Unit]</h4>
+      </div>
+      <div id="legend" class="legend-box">
+        <h4>SO2 Emission Hotspot</br>[kt / year]</h4>
+        <div><span class="circle color-coal"></span>Coal</div>
+        <div><span class="circle color-oilgas"></span>Oil & Gas</div>
+        <div><span class="circle color-smelter"></span>Smelter</div>
       </div>
     </div>
 
@@ -285,10 +319,10 @@
 
       // Hotspots
       var hotspot_radius = 3;
-      var color_smelter = "#260ff5";
-      var color_volcano = "#3bf7db";
-      var color_oilgas = "#f561c6";
-      var color_power = "#222";
+      var color_smelter = "#F93445";
+      var color_volcano = "#5b9279";
+      var color_oilgas = "blue";
+      var color_coal = "#2d2a3e";
 
       // Powerplants
       var color_powerplant_coal = "black";
@@ -332,32 +366,6 @@
         url: "mapbox://hubert-thieriot.2ydcm5hc",
       };
 
-      var hotspots_dots_layer = {
-        id: "layer-hotspots-dots",
-        source: "hotspots-dots",
-        "source-layer": "NASA_hotspots-cw8hvu",
-        type: "circle",
-        layout: {
-          visibility: "none",
-        },
-        paint: {
-          "circle-radius": hotspot_radius,
-          "circle-color": [
-            "match",
-            ["get", "SOURCETY"],
-            ["Power Plant"],
-            color_power,
-            ["Volcano"],
-            color_volcano,
-            ["Smelter"],
-            color_smelter,
-            ["Oil and Gas"],
-            color_oilgas,
-            "#000000",
-          ],
-        },
-      };
-
       var hotspots_emissions_name = "hotspots-emissions";
       var hotspots_emissions_source = {
         type: "vector",
@@ -389,7 +397,19 @@
             ],
             "circle-color": "hsla(0, 0%, 100%, 0)",
             "circle-stroke-width": 1,
-            "circle-stroke-color": "#000000",
+            "circle-stroke-color": [
+              "match",
+              ["get", "SOURCETY"],
+              ["Coal"],
+              color_coal,
+              ["Volcano"],
+              color_volcano,
+              ["Smelter"],
+              color_smelter,
+              ["Oil & Gas"],
+              color_oilgas,
+              "#000000",
+            ],
           },
         };
       }
